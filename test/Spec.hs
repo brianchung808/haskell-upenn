@@ -1,8 +1,57 @@
 import Test.QuickCheck
+import Test.Hspec
 import Lib
 
-prop_toDigitsRev :: Int -> Bool
-prop_toDigitsRev xs = (toDigitsRev xs) == (reverse (toDigits xs))
+genSinglePositive :: Gen Int
+genSinglePositive = abs `fmap` (arbitrary :: Gen Int) `suchThat` \x -> (0 < x && x < 10)
+
+genListSinglePositive :: Gen [Int]
+genListSinglePositive = listOf genSinglePositive
+
+genListSinglePositiveOddLength :: Gen [Int]
+genListSinglePositiveOddLength = genListSinglePositive `suchThat` \xs -> rem (length xs) 2 /= 0
+
+genListSinglePositiveEvenLength :: Gen [Int]
+genListSinglePositiveEvenLength = genListSinglePositive `suchThat` \xs -> rem (length xs) 2 == 0
+
+doubleEveryOtherOdd :: [Int] -> [Int]
+doubleEveryOtherOdd xs = zipWith (\x -> \y -> y x) xs $ take (length xs) $ cycle [\x -> x, (* 2)]
+
+doubleEveryOtherEven :: [Int] -> [Int]
+doubleEveryOtherEven xs = zipWith (\x -> \y -> y x) xs $ take (length xs) $ cycle [(* 2), \x -> x]
 
 main :: IO ()
-main = quickCheck prop_toDigitsRev
+main = hspec $ do
+  describe "toDigitsRev" $ do
+    it "is the reverse of toDigits" $ property $
+      \xs -> (toDigitsRev xs) == (reverse . toDigits $ xs)
+
+  describe "doubleEveryOther" $ do
+    it "handles empty" $ do
+      doubleEveryOther [] `shouldBe` []
+    it "handles single" $ do
+      forAll genSinglePositive $ \x -> (doubleEveryOther [x]) == [x]
+    it "handles odd" $ do
+      forAll genListSinglePositiveOddLength $ \x -> (doubleEveryOther x) == doubleEveryOtherOdd x
+    it "handles even" $ do
+      forAll genListSinglePositiveEvenLength $ \x -> (doubleEveryOther x) == doubleEveryOtherEven x
+
+  describe "sumDigits" $ do
+    it "can sum digits" $ do
+      forAll genListSinglePositive $ \xs -> (sumDigits xs) == (foldl (+) 0 xs)
+    it "handle empty" $ do
+      sumDigits [] `shouldBe` 0
+    it "handle single" $ property $
+      forAll genSinglePositive $ \x -> (sumDigits [x]) == x
+
+  describe "validate" $ do
+    it "works on valid" $ do
+      validate 4012888888881881 `shouldBe` True
+    it "works on invalid" $ do
+      validate 4012888888881882 `shouldBe` False
+
+  describe "hanoi" $ do
+    it "works" $ do
+      hanoi 1 "a" "b" "c" == [("a", "b")]
+    it "works" $ do
+      hanoi 2 "a" "b" "c" == [("a", "c"), ("a", "b"), ("c", "b")]
