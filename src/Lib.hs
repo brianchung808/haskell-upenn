@@ -3,8 +3,6 @@ module Lib where
 import Data.Char (digitToInt)
 import Prelude
 
--- Exercise 1
-
 toDigits :: Int -> [Int]
 toDigits n
   | n > 0 = map digitToInt . show $ n
@@ -13,30 +11,37 @@ toDigits n
 toDigitsRev :: Int -> [Int]
 toDigitsRev = reverse . toDigits
 
--- Exercise 2
 doubleEveryOther :: [Int] -> [Int]
--- doubleEveryOther [] = []
--- doubleEveryOther (x:[]) = [x]
--- doubleEveryOther l = (rest ++ [2*y]) ++ [x]
---   where (x:y:xs) = reverse l
---         rest = doubleEveryOther . reverse $ xs
-doubleEveryOther l = reverse $ zipWith (\x -> \y -> y x) xs $ take (length xs) $ cycle [\x -> x, (* 2)]
-  where xs = reverse l
+doubleEveryOther [] = []
+doubleEveryOther (x:[]) = [x]
+doubleEveryOther l = rest ++ [2*y] ++ [x]
+  where (x:y:xs) = reverse l
+        rest = doubleEveryOther . reverse $ xs
 
--- Exercise 3
+-- doubleEveryOther l = reverse $ zipWith apply xs $ take (length xs) $ ops
+--   where xs = reverse l
+--         apply = (\x -> \y -> y x)
+--         ops = cycle [\x -> x, (* 2)]
+
+instance Monoid Int where
+  mempty  = 0
+  mappend = (+)
+
 sumDigits :: [Int] -> Int
-sumDigits = (foldl (+) 0) . (>>= toDigits)
+sumDigits = mconcat . (>>= toDigits)
+-- sumDigits = (foldl mappend mempty) . (>>= toDigits)
+-- sumDigits = (foldl (+) 0) . (>>= toDigits)
+-- sumDigits = (foldl (+) 0) . (>>= toDigits)
 
--- Exercise 4
 validate :: Int -> Bool
-validate n = (rem (sumDigits . doubleEveryOther . toDigits $ n) 10) == 0
+validate n = rem (lunh n) 10 == 0
 
+lunh :: Int -> Int
+lunh = sumDigits . doubleEveryOther . toDigits
 
--- Exercise 4
 type Peg = String
 type Move = (Peg, Peg)
 
 hanoi :: Int -> Peg -> Peg -> Peg -> [Move]
 hanoi 0 _ _ _ = []
 hanoi n a b c = (hanoi (n-1) a c b) ++ [(a,b)] ++ (hanoi (n-1) c b a)
-

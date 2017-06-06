@@ -24,13 +24,13 @@ main :: IO ()
 main = hspec $ do
   describe "toDigitsRev" $ do
     it "is the reverse of toDigits" $ property $
-      \xs -> (toDigitsRev xs) == (reverse . toDigits $ xs)
+      \xs -> toDigitsRev xs == (reverse . toDigits $ xs)
 
   describe "doubleEveryOther" $ do
     it "handles empty" $ do
       doubleEveryOther [] `shouldBe` []
     it "handles single" $ do
-      forAll genSinglePositive $ \x -> (doubleEveryOther [x]) == [x]
+      forAll genSinglePositive $ \x -> doubleEveryOther [x] == [x]
     it "handles odd" $ do
       forAll genListSinglePositiveOddLength $ \x -> (doubleEveryOther x) == doubleEveryOtherOdd x
     it "handles even" $ do
@@ -38,11 +38,11 @@ main = hspec $ do
 
   describe "sumDigits" $ do
     it "can sum digits" $ do
-      forAll genListSinglePositive $ \xs -> (sumDigits xs) == (foldl (+) 0 xs)
+      forAll genListSinglePositive $ \xs -> sumDigits xs == (foldl (+) 0 xs)
     it "handle empty" $ do
       sumDigits [] `shouldBe` 0
     it "handle single" $ property $
-      forAll genSinglePositive $ \x -> (sumDigits [x]) == x
+      forAll genSinglePositive $ \x -> sumDigits [x] == x
 
   describe "validate" $ do
     it "works on valid" $ do
@@ -51,7 +51,9 @@ main = hspec $ do
       validate 4012888888881882 `shouldBe` False
 
   describe "hanoi" $ do
-    it "works" $ do
+    it "handles 1 disc" $ do
       hanoi 1 "a" "b" "c" == [("a", "b")]
-    it "works" $ do
+    it "handles 2 disc" $ do
       hanoi 2 "a" "b" "c" == [("a", "c"), ("a", "b"), ("c", "b")]
+    it "handles 3 disc" $ do
+      hanoi 3 "a" "b" "c" == [("a","b"),("a","c"),("b","c"),("a","b"),("c","a"),("c","b"),("a","b")]
