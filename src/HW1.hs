@@ -1,4 +1,4 @@
-module Lib where
+module HW1 where
 
 import Data.Char (digitToInt)
 import Prelude
