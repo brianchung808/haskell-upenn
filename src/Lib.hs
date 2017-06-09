@@ -23,14 +23,14 @@ doubleEveryOther l = rest ++ [2*y] ++ [x]
 --         apply = (\x -> \y -> y x)
 --         ops = cycle [\x -> x, (* 2)]
 
-instance Monoid Int where
-  mempty  = 0
-  mappend = (+)
+-- instance Monoid Int where
+--   mempty  = 0
+--   mappend = (+)
 
 sumDigits :: [Int] -> Int
-sumDigits = mconcat . (>>= toDigits)
+sumDigits = sum . (>>= toDigits)
+-- sumDigits = mconcat . (>>= toDigits)
 -- sumDigits = (foldl mappend mempty) . (>>= toDigits)
--- sumDigits = (foldl (+) 0) . (>>= toDigits)
 -- sumDigits = (foldl (+) 0) . (>>= toDigits)
 
 validate :: Int -> Bool
