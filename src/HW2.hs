@@ -15,27 +15,30 @@ parseMessage' l @ ("E":xs) = fromMaybe (Unknown $ unwords l) $ parseError xs
 parseMessage' a @ _ = Unknown $ unwords a
 
 parseInfo :: [String] -> Maybe LogMessage
-parseInfo (t:xs) = (\x -> LogMessage Info x (unwords xs)) <$> readMaybe t
+parseInfo (t:xs) = createInfo <$> readMaybe t
+  where createInfo x = LogMessage Info x (unwords xs)
 parseInfo _ = Nothing
--- parseInfo (t:xs) =  fmap (\x -> (LogMessage Info x (unwords xs))) $ readMaybe t
 
 parseWarning :: [String] -> Maybe LogMessage
-parseWarning (t:xs) = (\x -> LogMessage Warning x (unwords xs)) <$> readMaybe t
+parseWarning (t:xs) = createWarning <$> readMaybe t
+  where createWarning x = LogMessage Warning x (unwords xs)
 parseWarning _ = Nothing
 
 zipMaybe :: Maybe a -> Maybe b -> Maybe (a, b)
 zipMaybe a b = a >>= (\a' -> (\b' -> (a', b')) <$> b)
+-- lol
+-- zipMaybe = (. flip ((<$>) . (,))) . (>>=)
 
 parseError :: [String] -> Maybe LogMessage
-parseError (e:xs) =  toError <$> zipMaybe maybeError maybeTimestamp
+parseError (e:xs) = createError <$> zipMaybe maybeError maybeTimestamp
   where (t:xs') = xs
         maybeError = readMaybe e :: Maybe Int
         maybeTimestamp = readMaybe t :: Maybe Int
-        toError (a, b) = LogMessage (Error a) b (unwords xs')
+        createError (a, b) = LogMessage (Error a) b (unwords xs')
 parseError _ = Nothing
 
 parse :: String -> [LogMessage]
-parse xs = parseMessage <$> lines xs
+parse = (parseMessage <$>) . lines
 
 insert :: LogMessage -> MessageTree -> MessageTree
 insert (Unknown _) m = m
@@ -44,11 +47,9 @@ insert msg @ (LogMessage _ t1 _) (Node left node @ (LogMessage _ t2 _) right)
   | t1 >= t2 = Node left node $ insert msg right
   | t1 < t2 = Node (insert msg left) node right
 
-insert' :: MessageTree -> LogMessage -> MessageTree
-insert' m l = insert l m
-
 build :: [LogMessage] -> MessageTree
 build = foldl insert' Leaf
+  where insert' = flip insert
 
 inOrder :: MessageTree -> [LogMessage]
 inOrder Leaf = []
@@ -61,6 +62,7 @@ whatWentWrong xs = getMessage <$> (inOrder . build) errors
 
 getMessage :: LogMessage -> String
 getMessage (LogMessage _ _ s) = s
+getMessage (Unknown s) = s
 
 isError :: LogMessage -> Bool
 isError (LogMessage (Error _) _ _) = True
