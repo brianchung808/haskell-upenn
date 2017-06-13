@@ -1,4 +1,4 @@
-module HW2 (build, insert, inOrder, parseMessage, parse) where
+module HW2 (build, insert, inOrder, parseMessage, parse, whatWentWrong) where
 
 import Log
 import Data.String (words, unwords)
@@ -53,3 +53,15 @@ build = foldl insert' Leaf
 inOrder :: MessageTree -> [LogMessage]
 inOrder Leaf = []
 inOrder (Node m1 l m2) = inOrder m1 ++ [l] ++ inOrder m2
+
+whatWentWrong :: [LogMessage] -> [String]
+whatWentWrong [] = []
+whatWentWrong xs = getMessage <$> (inOrder . build) errors
+  where errors = filter isError xs
+
+getMessage :: LogMessage -> String
+getMessage (LogMessage _ _ s) = s
+
+isError :: LogMessage -> Bool
+isError (LogMessage (Error _) _ _) = True
+isError _ = False

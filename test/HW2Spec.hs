@@ -64,6 +64,11 @@ spec = do
         `shouldBe`
         [LogMessage Info 1 "Nothing to report",LogMessage (Error 20) 2 "Too many pickles",LogMessage (Error 70) 3 "Way too many pickles",LogMessage Info 4 "Everything normal",LogMessage Warning 5 "Flange is due for a check-up",LogMessage Info 6 "Completed armadillo processing",LogMessage Info 7 "Out for lunch, back in two time steps",LogMessage (Error 65) 8 "Bad pickle-flange interaction detected",LogMessage Info 9 "Back from lunch",LogMessage (Error 99) 10 "Flange failed",LogMessage Info 11 "Initiating self-destruct sequence"]
 
+  describe "whatWentWrong" $ do
+    it "works for all errors" $
+      whatWentWrong [LogMessage (Error 3) 2 "Second Error", LogMessage (Error 3) 1 "First Error", LogMessage (Error 3) 3 "Third Error"] `shouldBe` ["First Error", "Second Error", "Third Error"]
+    it "empty list for no errors" $ property $
+      forAll (listOf genInfo) $ \x -> whatWentWrong x === []
 
 printOrder :: MessageTree -> [Int]
 printOrder Leaf = []
