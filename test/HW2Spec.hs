@@ -37,6 +37,17 @@ spec = do
       `shouldBe`
       [LogMessage Info 6 "Completed armadillo processing", LogMessage Info 1 "Nothing to report", LogMessage Info 4 "Everything normal", LogMessage Info 11 "Initiating self-destruct sequence", LogMessage (Error 70) 3 "Way too many pickles", LogMessage (Error 65) 8 "Bad pickle-flange interaction detected", LogMessage Warning 5 "Flange is due for a check-up", LogMessage Info 7 "Out for lunch, back in two time steps", LogMessage (Error 20) 2 "Too many pickles", LogMessage Info 9 "Back from lunch", LogMessage (Error 99) 10 "Flange failed"]
 
+  describe "insert" $ do
+    it "noops for Unknown" $ property $
+      forAll genUnknown $ \x -> insert x Leaf === Leaf
+    it "handles Leaf" $
+      insert (LogMessage Info 6 "hi") Leaf `shouldBe` Node Leaf (LogMessage Info 6 "hi") Leaf
+    it "can handle one greater" $
+      insert (LogMessage Info 6 "there") (Node Leaf (LogMessage Info 5 "hi") Leaf) `shouldBe` Node Leaf (LogMessage Info 5 "hi") (Node Leaf (LogMessage Info 6 "there") Leaf)
+    it "can handle one lesser" $
+      insert (LogMessage Info 4 "there") (Node Leaf (LogMessage Info 5 "hi") Leaf) `shouldBe` Node (Node Leaf (LogMessage Info 4 "there") Leaf) (LogMessage Info 5 "hi") Leaf
+    it "can handle one equal" $
+      insert (LogMessage Info 5 "there") (Node Leaf (LogMessage Info 5 "hi") Leaf) `shouldBe` Node Leaf (LogMessage Info 5 "hi") (Node Leaf (LogMessage Info 5 "there") Leaf)
 
 
 escape :: String -> String
@@ -46,21 +57,25 @@ genInfo :: Gen LogMessage
 genInfo = do
   a <- arbitrary
   b <- arbitrary
-  return (LogMessage Info a (escape b))
+  return $ LogMessage Info a $ escape b
 
+genUnknown :: Gen LogMessage
+genUnknown = do
+  a <- arbitrary
+  return $ Unknown a
 
 genWarning :: Gen LogMessage
 genWarning = do
   a <- arbitrary
   b <- arbitrary
-  return (LogMessage Warning a (escape b))
+  return $ LogMessage Warning a $ escape b
 
 genError :: Gen LogMessage
 genError = do
   a <- arbitrary
   b <- arbitrary
   c <- arbitrary
-  return (LogMessage (Error a) b (escape c))
+  return $ LogMessage (Error a) b $ escape c
 
 showLogMessage :: LogMessage -> String
 showLogMessage (LogMessage Info t s) = "I " ++ show t ++ " " ++ s

@@ -1,4 +1,4 @@
-module HW2 (parseMessage, parse) where
+module HW2 (insert, parseMessage, parse) where
 
 import Log
 import Data.String (words, unwords)
@@ -36,3 +36,10 @@ parseError _ = Nothing
 
 parse :: String -> [LogMessage]
 parse xs = parseMessage <$> lines xs
+
+insert :: LogMessage -> MessageTree -> MessageTree
+insert (Unknown _) m = m
+insert l Leaf = Node Leaf l Leaf
+insert msg @ (LogMessage _ t1 _) (Node left node @ (LogMessage _ t2 _) right)
+  | t1 >= t2 = Node left node $ insert msg right
+  | t1 < t2 = Node (insert msg left) node right
