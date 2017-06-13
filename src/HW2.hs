@@ -1,4 +1,4 @@
-module HW2 (insert, parseMessage, parse) where
+module HW2 (build, insert, inOrder, parseMessage, parse) where
 
 import Log
 import Data.String (words, unwords)
@@ -43,3 +43,13 @@ insert l Leaf = Node Leaf l Leaf
 insert msg @ (LogMessage _ t1 _) (Node left node @ (LogMessage _ t2 _) right)
   | t1 >= t2 = Node left node $ insert msg right
   | t1 < t2 = Node (insert msg left) node right
+
+insert' :: MessageTree -> LogMessage -> MessageTree
+insert' m l = insert l m
+
+build :: [LogMessage] -> MessageTree
+build = foldl insert' Leaf
+
+inOrder :: MessageTree -> [LogMessage]
+inOrder Leaf = []
+inOrder (Node m1 l m2) = inOrder m1 ++ [l] ++ inOrder m2

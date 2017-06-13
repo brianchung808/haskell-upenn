@@ -49,6 +49,25 @@ spec = do
     it "can handle one equal" $
       insert (LogMessage Info 5 "there") (Node Leaf (LogMessage Info 5 "hi") Leaf) `shouldBe` Node Leaf (LogMessage Info 5 "hi") (Node Leaf (LogMessage Info 5 "there") Leaf)
 
+  describe "build" $ do
+    it "is Leaf for empty list" $
+      build [] `shouldBe` Leaf
+    it "works" $
+      (printOrder . build) [LogMessage Info 6 "Completed armadillo processing", LogMessage Info 1 "Nothing to report", LogMessage Info 4 "Everything normal", LogMessage Info 11 "Initiating self-destruct sequence", LogMessage (Error 70) 3 "Way too many pickles", LogMessage (Error 65) 8 "Bad pickle-flange interaction detected", LogMessage Warning 5 "Flange is due for a check-up", LogMessage Info 7 "Out for lunch, back in two time steps", LogMessage (Error 20) 2 "Too many pickles", LogMessage Info 9 "Back from lunch", LogMessage (Error 99) 10 "Flange failed"]
+      `shouldBe`
+      [1..11]
+  describe "inOrder" $ do
+    it "is empty for Leaf" $
+      inOrder Leaf `shouldBe` []
+    it "works" $ do
+      (inOrder . build) [LogMessage Info 6 "Completed armadillo processing", LogMessage Info 1 "Nothing to report", LogMessage Info 4 "Everything normal", LogMessage Info 11 "Initiating self-destruct sequence", LogMessage (Error 70) 3 "Way too many pickles", LogMessage (Error 65) 8 "Bad pickle-flange interaction detected", LogMessage Warning 5 "Flange is due for a check-up", LogMessage Info 7 "Out for lunch, back in two time steps", LogMessage (Error 20) 2 "Too many pickles", LogMessage Info 9 "Back from lunch", LogMessage (Error 99) 10 "Flange failed"]
+        `shouldBe`
+        [LogMessage Info 1 "Nothing to report",LogMessage (Error 20) 2 "Too many pickles",LogMessage (Error 70) 3 "Way too many pickles",LogMessage Info 4 "Everything normal",LogMessage Warning 5 "Flange is due for a check-up",LogMessage Info 6 "Completed armadillo processing",LogMessage Info 7 "Out for lunch, back in two time steps",LogMessage (Error 65) 8 "Bad pickle-flange interaction detected",LogMessage Info 9 "Back from lunch",LogMessage (Error 99) 10 "Flange failed",LogMessage Info 11 "Initiating self-destruct sequence"]
+
+
+printOrder :: MessageTree -> [Int]
+printOrder Leaf = []
+printOrder (Node m1 (LogMessage _ t _) m2) = printOrder m1 ++ [t] ++ printOrder m2
 
 escape :: String -> String
 escape = unwords . words
