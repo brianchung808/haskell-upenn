@@ -1,4 +1,4 @@
-module HW2 (parseMessage) where
+module HW2 (parseMessage, parse) where
 
 import Log
 import Data.String (words, unwords)
@@ -33,3 +33,6 @@ parseError (e:xs) =  toError <$> zipMaybe maybeError maybeTimestamp
         maybeTimestamp = readMaybe t :: Maybe Int
         toError (a, b) = LogMessage (Error a) b (unwords xs')
 parseError _ = Nothing
+
+parse :: String -> [LogMessage]
+parse xs = parseMessage <$> lines xs
