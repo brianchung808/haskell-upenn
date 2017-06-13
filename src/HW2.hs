@@ -1,22 +1,24 @@
-module HW2 where
+module HW2 (parseMessage) where
 
 import Log
-import Data.List
-import Data.String
+import Data.String (words, unwords)
+import Data.Maybe (fromMaybe)
+import Text.Read (readMaybe)
 
 parseMessage :: String -> LogMessage
 parseMessage = parseMessage' . words
 
 parseMessage' :: [String] -> LogMessage
-parseMessage' ("I":xs) = parseInfo xs
+parseMessage' l @ ("I":xs) = fromMaybe (Unknown $ unwords l) $ parseInfo xs
 parseMessage' ("E":xs) = parseError xs
 parseMessage' a @ _ = Unknown $ unwords a
 
 -- I 147 mice in the air, I’m afraid, but you might catch a bat, and
 
-parseInfo :: [String] -> LogMessage
-parseInfo (t:xs) = LogMessage Info (read t) (unwords xs)
-parseInfo a @ _ = Unknown $ unwords a
+parseInfo :: [String] -> Maybe LogMessage
+parseInfo (t:xs) = (\x -> LogMessage Info x (unwords xs)) <$> readMaybe t
+parseInfo _ = Nothing
+-- parseInfo (t:xs) =  fmap (\x -> (LogMessage Info x (unwords xs))) $ readMaybe t
 
 parseError :: [String] -> LogMessage
 parseError (e:xs) = LogMessage (Error $ read e) (read t) (unwords xs')
