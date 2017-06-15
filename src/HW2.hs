@@ -4,6 +4,7 @@ import Log
 import Data.String (words, unwords)
 import Data.Maybe (fromMaybe)
 import Text.Read (readMaybe)
+import Control.Applicative (liftA2)
 
 parseMessage :: String -> LogMessage
 parseMessage = parseMessage' . words
@@ -12,7 +13,7 @@ parseMessage' :: [String] -> LogMessage
 parseMessage' l @ ("I":xs) = fromMaybe (Unknown $ unwords l) $ parseInfo xs
 parseMessage' l @ ("W":xs) = fromMaybe (Unknown $ unwords l) $ parseWarning xs
 parseMessage' l @ ("E":xs) = fromMaybe (Unknown $ unwords l) $ parseError xs
-parseMessage' a @ _ = Unknown $ unwords a
+parseMessage' l            = Unknown $ unwords l
 
 parseInfo :: [String] -> Maybe LogMessage
 parseInfo (t:xs) = createInfo <$> readMaybe t
@@ -24,17 +25,13 @@ parseWarning (t:xs) = createWarning <$> readMaybe t
   where createWarning x = LogMessage Warning x (unwords xs)
 parseWarning _ = Nothing
 
-zipMaybe :: Maybe a -> Maybe b -> Maybe (a, b)
-zipMaybe a b = a >>= (\a' -> (\b' -> (a', b')) <$> b)
--- lol
--- zipMaybe = (. flip ((<$>) . (,))) . (>>=)
-
 parseError :: [String] -> Maybe LogMessage
-parseError (e:xs) = createError <$> zipMaybe maybeError maybeTimestamp
+parseError (e:xs) = createError <$> zip maybeError maybeTimestamp
   where (t:xs') = xs
         maybeError = readMaybe e :: Maybe Int
         maybeTimestamp = readMaybe t :: Maybe Int
         createError (a, b) = LogMessage (Error a) b (unwords xs')
+        zip = liftA2 (,)
 parseError _ = Nothing
 
 parse :: String -> [LogMessage]
@@ -46,6 +43,7 @@ insert l Leaf = Node Leaf l Leaf
 insert msg @ (LogMessage _ t1 _) (Node left node @ (LogMessage _ t2 _) right)
   | t1 >= t2 = Node left node $ insert msg right
   | t1 < t2 = Node (insert msg left) node right
+insert _ m  = m
 
 build :: [LogMessage] -> MessageTree
 build = foldl insert' Leaf
